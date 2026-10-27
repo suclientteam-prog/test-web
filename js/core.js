@@ -1,8 +1,8 @@
-/* Little Star English – shared engine: lesson data, audio, music, Bunny, stars, stickers, celebrations */
+/* Learning English with Mây – shared engine: lesson data, audio, music, Bunny, stars, stickers, celebrations */
 window.LS = (() => {
   "use strict";
   const A = window.ASSETS;
-  const VT = window.VOICE_TEXT || {};
+  const VT = window.VOICE_TEXT || {}; // optional overrides
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -12,38 +12,19 @@ window.LS = (() => {
   const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
   const restart = (el, cls) => { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
 
-  /* ---------- lesson content (3 class PDFs) ---------- */
-  const WEEKS = [
-    { id: "w3", en: "School things", vi: "14 – 18/9" },
-    { id: "w4", en: "Mid-Autumn",    vi: "21 – 25/9" },
-    { id: "w5", en: "Letter S",      vi: "28/9 – 02/10" },
-  ];
-  const WORDS = [
-    { id: "backpack",  en: "backpack",   vi: "cái ba lô",      week: "w3", edge: "#ff4f9a", a: "a backpack" },
-    { id: "book",      en: "book",       vi: "quyển sách",     week: "w3", edge: "#ff2d2d", a: "a book" },
-    { id: "chair",     en: "chair",      vi: "cái ghế",        week: "w3", edge: "#a83232", a: "a chair" },
-    { id: "crayon",    en: "crayon",     vi: "bút sáp màu",    week: "w3", edge: "#7a3a10", a: "a crayon" },
-    { id: "gluestick", en: "glue stick", vi: "keo dán",        week: "w3", edge: "#f07a10", a: "a glue stick" },
-    { id: "pencil",    en: "pencil",     vi: "bút chì",        week: "w3", edge: "#7cc02a", a: "a pencil" },
-    { id: "table",     en: "table",      vi: "cái bàn",        week: "w3", edge: "#1a8ac6", a: "a table" },
-    { id: "moon",      en: "moon",       vi: "mặt trăng",      week: "w4", edge: "#6b3a1c", a: "the moon", mid: true },
-    { id: "mooncake",  en: "moon cake",  vi: "bánh trung thu", week: "w4", edge: "#b0643a", a: "a moon cake", mid: true },
-    { id: "lantern",   en: "lantern",    vi: "đèn lồng",       week: "w4", edge: "#f07a10", a: "a lantern", mid: true },
-    { id: "moonlady",  en: "moon lady",  vi: "chị Hằng",       week: "w4", edge: "#e0b090", a: "the moon lady", mid: true },
-    { id: "rabbit",    en: "rabbit",     vi: "con thỏ",        week: "w4", edge: "#f5c842", a: "a rabbit", mid: true },
-    { id: "school",    en: "school",     vi: "trường học",     week: "w5", edge: "#ff4f9a", a: "a school" },
-    { id: "scissors",  en: "scissors",   vi: "cái kéo",        week: "w5", edge: "#ff2d2d", a: "scissors" },
-    { id: "snake",     en: "snake",      vi: "con rắn",        week: "w5", edge: "#a83232", a: "a snake" },
-    { id: "tidyup",    en: "tidy up",    vi: "dọn dẹp",        week: "w5", edge: "#3aa0e8" },
-  ];
-  const W = Object.fromEntries(WORDS.map(w => [w.id, w]));
-  const NOUNS = WORDS.filter(w => w.id !== "tidyup");
+  /* ---------- lesson content (js/lessons.js) ---------- */
+  const LS_ = window.LESSONS;
+  const { WORDS, W, WEEKS, MONTHS, LETTERS } = LS_;
   const SUPPLIES = ["backpack", "book", "crayon", "gluestick", "pencil", "scissors"];
+  const TEXT = Object.assign(LS_.allLines(), VT);
   const wordKey = id => "w_" + id;
-  /* the full sentence each picture "says" */
-  const lineKey = id => id === "moonlady" ? "a_moonlady" : W[id] && W[id].mid ? "itis_" + id : "this_" + id;
-  const lineText = id => VT[lineKey(id)] || W[id].en;
-  const TEXT = VT;
+  /* the sentence a picture "says": the first answer that uses it in the class structures */
+  function lineFor(id, qas) {
+    for (const qa of [...(qas || []), ...WEEKS.flatMap(wk => wk.qa)]) {
+      if (qa.type === "ask" && qa.items.includes(id)) { const t = LS_.qaLines(qa, id).a; return { key: LS_.slug(t), text: t }; }
+    }
+    return { key: wordKey(id), text: W[id] ? W[id].en : id };
+  }
 
   /* ---------- icons ---------- */
   const stroke = (d, w = 3.2) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -74,7 +55,7 @@ window.LS = (() => {
 
   /* ---------- saved progress ---------- */
   const KEY = "ls-nemo2-v3";
-  const save = { stars: 0, stickers: [], fresh: [], music: true, sfx: true, friend: null, skill: {} };
+  const save = { stars: 0, stickers: [], fresh: [], music: true, sfx: true, friend: null, skill: {}, done: {}, month: null };
   try { Object.assign(save, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { /* storage off */ }
   try { const old = JSON.parse(localStorage.getItem("ls-nemo2-v2") || "{}"); if (old.stars > save.stars) { save.stars = old.stars; save.music = old.music !== false; } } catch (e) { /* */ }
   const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* private mode */ } };
@@ -265,13 +246,13 @@ window.LS = (() => {
       const handle = { stop() {}, finish() { if (!finished) { finished = true; res(); } } };
       current = handle;
       const done = () => { if (current === handle) current = null; handle.finish(); };
-      if (!A.audio[key]) { speak(VT[key]).then(done); return; }
+      if (!A.audio[key]) { speak(TEXT[key]).then(done); return; }
       const viaElement = () => {
         if (finished) return;
         player.pause(); player.src = A.audio[key];
         handle.stop = () => player.pause();
-        player.onended = done; player.onerror = () => speak(VT[key]).then(done);
-        const p = player.play(); if (p && p.catch) p.catch(() => speak(VT[key]).then(done));
+        player.onended = done; player.onerror = () => speak(TEXT[key]).then(done);
+        const p = player.play(); if (p && p.catch) p.catch(() => speak(TEXT[key]).then(done));
         setTimeout(done, 7000);
       };
       if (webAudioVoice && audioCtx()) {
@@ -368,7 +349,8 @@ window.LS = (() => {
       <div class="gate-card">
         <div class="gate-bubble" id="gateBubble">Zzz…</div>
         <button class="gate-bunny" id="gateBunny" aria-label="Wake Bunny up">${window.ART.friend("bunny", { mascot: true }).replace("mood-idle", "mood-sleep")}</button>
-        <p class="gate-hint" id="gateHint"><span class="hand" aria-hidden="true">👆</span> Chạm vào Bunny để đánh thức bạn ấy nhé!</p>
+        <p class="gate-title">Learning English <span>with Mây</span></p>
+        <p class="gate-hint" id="gateHint"><span class="hand" aria-hidden="true">👆</span> Mây ơi, chạm vào Bunny để đánh thức bạn ấy nhé!</p>
         <button class="btn green gate-yes" id="gateYes" hidden>YES!</button>
       </div>`;
     document.body.appendChild(g);
@@ -417,7 +399,7 @@ window.LS = (() => {
   function toast(s) {
     const t = document.createElement("div");
     t.className = "toast"; t.setAttribute("role", "status");
-    t.innerHTML = `<span class="toast-art sticker-art">${stickerArt(s)}</span><span><b>New sticker!</b><small>Bé nhận sticker mới</small></span>`;
+    t.innerHTML = `<span class="toast-art sticker-art">${stickerArt(s)}</span><span><b>New sticker!</b><small>Mây nhận sticker mới</small></span>`;
     document.body.appendChild(t);
     sfx("sparkle"); restart($("#stickerBtn"), "bump");
     document.dispatchEvent(new CustomEvent("sticker", { detail: s.id }));
@@ -485,7 +467,7 @@ window.LS = (() => {
   }
   let celeOpen = false;
   const isCelebrating = () => celeOpen;
-  function celebrate({ title = "Hooray!", sub = "Bé giỏi quá!", again, voice = ["hooray"] } = {}) {
+  function celebrate({ title = "Hooray!", sub = "Mây giỏi quá!", again, voice = ["hooray"], home = "#home", homeLabel = "Home" } = {}) {
     closeCelebrate();
     celeOpen = true;
     const earned = sessionGot.map(id => STICKERS.find(s => s.id === id)).filter(Boolean);
@@ -499,10 +481,10 @@ window.LS = (() => {
         <h2>${title}</h2><p>${sub}</p>
         ${earned.length
           ? `<div class="cele-stickers" aria-label="New stickers">${earned.map((s, i) => `<span class="sticker-art" style="animation-delay:${400 + i * 200}ms">${stickerArt(s)}</span>`).join("")}</div><p class="cele-note">Sticker mới trong sổ sticker!</p>`
-          : `<p class="cele-note">${next ? `Còn ${next} ⭐ nữa là có sticker mới` : "Bé đã có đủ sticker!"}</p>`}
+          : `<p class="cele-note">${next ? `Còn ${next} ⭐ nữa là có sticker mới` : "Mây đã có đủ sticker!"}</p>`}
         <div class="cele-actions">
           ${again ? `<button class="btn green" data-a="again">${I.again} Play again</button>` : ""}
-          <a class="btn white" href="#home" data-a="home">${I.home} Home</a>
+          <a class="btn white" href="${home}" data-a="home">${I.home} ${homeLabel}</a>
           ${earned.length ? `<a class="btn pink" href="#stickers" data-a="stickers">${I.book} Stickers</a>` : ""}
         </div>
       </div>`;
@@ -520,14 +502,18 @@ window.LS = (() => {
   const startSession = () => { sessionGot = []; };
 
   function mountHeader() {
-    const logo = $("#brandLogo"); if (logo) logo.src = img("logo");
     const mb = $("#musicBtn"); if (mb) mb.onclick = () => { unlock(); toggleMusic(); };
     updateMusicBtn(); renderStars();
   }
 
+  /* finished activities: "t10w4:find" → true */
+  const isDone = (scope, act) => !!save.done[scope + ":" + act];
+  function markDone(scope, act) { if (!scope || isDone(scope, act)) return; save.done[scope + ":" + act] = true; persist(); }
+
   return {
     $, $$, wait, shuffle, pick, img, reduced, restart,
-    WEEKS, WORDS, W, NOUNS, SUPPLIES, TEXT, I, lineKey, lineText, wordKey,
+    WEEKS, MONTHS, LETTERS, WORDS, W, SUPPLIES, TEXT, I, lineFor, wordKey, slug: LS_.slug, qaLines: LS_.qaLines,
+    isDone, markDone,
     STICKERS, STARS_PER_STICKER, STARTER, stickerArt, nextStickerIn, owns, save, persist, renderStars,
     skill, learn, pickWeighted,
     say, hush, praise, sfx, preload, addStar, burst, floaters, celebrate, closeCelebrate, isCelebrating, startSession,
