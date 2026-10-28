@@ -33,9 +33,27 @@ Home shows **this week** (from today's date), the three months as tabs, a 2-minu
 4. **Say it** – sentences to say together ("I love Vietnam.", "Happy Halloween!").
 
 Plus the week's own activities (Letter S/A/P tracing, Tidy up, Pack my bag, Moon night, Explore scenes,
-Catch the gingerbread man, class songs) and 5 games played with the week's words.
+Catch the gingerbread man, class songs) and 5 games played with the week's words
+(Bubble shooter, Find the same, Shadow match, Match 3, Tap & hear).
 Each month has a month review (quiz + games over all its weeks).
-Stars per week: words · listen · answer. Every 5 stars gives a sticker for "My friend".
+Stars per week: words · listen · answer.
+
+## Stickers & My friend
+Every 5 stars gives a random sticker (81 in `STICKERS` in `js/lessons.js`); doubles are counted and the
+sticker book shows "×2", "×3"… Each sticker is used in "My friend":
+food → Eat, clothes → Dress (one thing per place: head, face, neck, hand…), bath/bed things → Bath/Sleep,
+places → Play (change the background), decorations → Play (drag them around the scene; one copy per sticker
+you have; drop one on the tray to put it back).
+
+My friend also has needs (food, rest, fun – the three rings on the stage, saved in `needs` and going down with
+real time). It says "I'm hungry!", "I'm sleepy.", "I want to play!"; tap it and it answers "How are you?" with
+"I'm happy." / "I'm sad. I'm hungry!". When full it says "No, thank you."; when rested it is "not sleepy".
+Stars earned anywhere make it happier.
+**Go out** reviews the lessons taught so far (weakest words first):
+- Park – things pop up on the way, the teacher asks the class question, Mây chooses the answer sentence.
+- Supermarket – "I need a banana." – find it on the shelf (food words of the lessons); then the friend eats.
+- Exercise – watch and choose "I can jump / run / swim", "Where is your nose? Point to the nose.", yoga poses.
+Outings make it happy but tired and hungry (exercise most), so the child goes back to Eat and Sleep.
 
 ## Adding a new week
 1. Add the words (and the week, with its `days` and `qa`) to `js/lessons.js`.

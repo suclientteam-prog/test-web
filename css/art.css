@@ -58,3 +58,42 @@
 .friend.show-blanket .arm-l, .friend.show-blanket .arm-r { visibility: hidden; }
 .friend .o-shirt, .friend .o-shoes, .friend .o-hat, .friend .o-socks, .friend .o-glasses, .friend .o-crown, .friend .x-bubbles, .friend .x-pillow, .friend .x-blanket { transform-box: fill-box; transform-origin: center; animation: wearIn .45s cubic-bezier(.3,1.6,.5,1); }
 @keyframes wearIn { from { transform: scale(.2); opacity: 0; } }
+
+/* sad and tired (My friend's needs) */
+.friend .m-sad, .friend .x-tear { display: none; }
+.friend.mood-sad .m-smile, .friend.mood-tired .m-smile { display: none; }
+.friend.mood-sad .m-sad, .friend.mood-sad .x-tear { display: inline; }
+.friend.mood-sad .pupils { transform: translateY(4px); }
+.friend.mood-sad .f-head { transform-origin: 120px 180px; transform: rotate(4deg) translateY(4px); transition: transform .4s; }
+.friend.mood-sad .ear-l { animation: none; transform: rotate(-22deg); } .friend.mood-sad .ear-r { animation: none; transform: rotate(22deg); }
+.friend .x-tear { transform-box: fill-box; transform-origin: top; animation: tear 1.8s ease-in infinite; }
+@keyframes tear { 0% { transform: translateY(-4px) scale(.4); opacity: 0; } 30% { opacity: 1; transform: none; } 100% { transform: translateY(26px); opacity: 0; } }
+.friend.mood-tired .e-open { display: none; }
+.friend.mood-tired .e-closed, .friend.mood-tired .m-o { display: inline; }
+.friend.mood-tired .f-all { animation: snooze 2.4s ease-in-out infinite; }
+.friend.mood-tired .f-head { transform-origin: 120px 180px; animation: nod 2.4s ease-in-out infinite; }
+@keyframes nod { 50% { transform: rotate(-7deg) translateY(5px); } }
+
+/* exercise and yoga: the friend shows the move */
+.friend.pose-tree .arm-l { transform: rotate(158deg); } .friend.pose-tree .arm-r { transform: rotate(-158deg); }
+.friend.pose-tree .f-all { animation: treeSway 2s ease-in-out infinite; }
+@keyframes treeSway { 50% { transform: rotate(4deg); } }
+.friend.pose-star .arm-l { transform: rotate(105deg); } .friend.pose-star .arm-r { transform: rotate(-105deg); }
+.friend.pose-star .f-all { animation: starPop 1s ease-in-out infinite; }
+@keyframes starPop { 50% { transform: scale(1.08) translateY(-10px); } }
+.friend.pose-cat .f-all { animation: catStretch 1.6s ease-in-out infinite; }
+@keyframes catStretch { 50% { transform: scale(1.12, .8); } }
+.friend.pose-butterfly .arm-l { animation: flapL .35s ease-in-out infinite alternate; } .friend.pose-butterfly .arm-r { animation: flapR .35s ease-in-out infinite alternate; }
+@keyframes flapL { from { transform: rotate(60deg); } to { transform: rotate(130deg); } }
+@keyframes flapR { from { transform: rotate(-60deg); } to { transform: rotate(-130deg); } }
+.friend.act-jump .f-all { animation: jumpUp .55s ease-in-out infinite; }
+@keyframes jumpUp { 0%, 100% { transform: translateY(0) scale(1.04, .94); } 50% { transform: translateY(-46px) scale(.97, 1.04); } }
+.friend.act-jump .arm-l { transform: rotate(120deg); } .friend.act-jump .arm-r { transform: rotate(-120deg); }
+.friend.act-run .f-all { animation: runBob .26s ease-in-out infinite alternate; }
+@keyframes runBob { from { transform: translateY(0) rotate(-3deg); } to { transform: translateY(-10px) rotate(3deg); } }
+.friend.act-run .arm-l { animation: flapL .26s ease-in-out infinite alternate; } .friend.act-run .arm-r { animation: flapR .26s ease-in-out infinite alternate-reverse; }
+.friend.act-swim .arm-l { animation: swimL .8s linear infinite; } .friend.act-swim .arm-r { animation: swimR .8s linear infinite .4s; }
+.friend.act-swim .f-all { animation: swimBob 1.6s ease-in-out infinite; }
+@keyframes swimL { to { transform: rotate(360deg); } }
+@keyframes swimR { to { transform: rotate(-360deg); } }
+@keyframes swimBob { 50% { transform: translateY(8px) rotate(-3deg); } }

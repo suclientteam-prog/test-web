@@ -40,40 +40,61 @@ window.LS = (() => {
     book: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4.5A2.5 2.5 0 016.5 2H20v16H6.5a1.5 1.5 0 000 3H20v1H6.5A2.5 2.5 0 014 19.5z"/><path d="M12 5.5l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z" fill="#ffc53d"/></svg>',
   };
 
-  /* ---------- stickers (care items are stickers too) ---------- */
-  const STICKERS = [
-    { id: "banana", art: "e_banana" }, { id: "moon", art: "moon" }, { id: "sponge", art: "e_sponge" }, { id: "hat", art: "e_hat" },
-    { id: "rabbit", art: "rabbit" }, { id: "milk", art: "e_milk" }, { id: "book", art: "book" }, { id: "shoes", art: "e_shoes" },
-    { id: "teddy", art: "e_teddy" }, { id: "mooncake", art: "mooncake" }, { id: "carrot", art: "e_carrot" }, { id: "socks", art: "e_socks" },
-    { id: "lantern", art: "lantern" }, { id: "sunglasses", art: "e_sunglasses" }, { id: "cookie", art: "e_cookie" }, { id: "crown", art: "e_crown" },
-    { id: "moonlady", art: "moonlady" }, { id: "heart", art: "e_heart" }, { id: "snake", art: "snake" }, { id: "rainbow", art: "e_rainbow" },
-    { id: "school", art: "school" }, { id: "balloon", art: "e_balloon" }, { id: "pencil", art: "pencil" }, { id: "sun", art: "e_sun" },
-  ];
+  /* ---------- stickers (js/lessons.js; care items are stickers too) ---------- */
+  const STICKERS = LS_.STICKERS;
+  const stickerOf = id => STICKERS.find(s => s.id === id);
   const STARS_PER_STICKER = 5;
   const STARTER = ["apple", "soap", "shower", "shirt", "pillow"]; // care items everyone has from the start
   const stickerArt = s => `<img src="${img(s.art)}" alt="">`;
 
   /* ---------- saved progress ---------- */
   const KEY = "ls-nemo2-v3";
-  const save = { stars: 0, stickers: [], fresh: [], music: true, sfx: true, friend: null, skill: {}, done: {}, month: null };
+  const save = { stars: 0, bag: null, drawn: 0, fresh: [], music: true, sfx: true, friend: null, skill: {}, done: {}, month: null };
   try { Object.assign(save, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { /* storage off */ }
   try { const old = JSON.parse(localStorage.getItem("ls-nemo2-v2") || "{}"); if (old.stars > save.stars) { save.stars = old.stars; save.music = old.music !== false; } } catch (e) { /* */ }
   const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* private mode */ } };
+  // older saves kept a plain list of stickers, one of each
+  if (!save.bag) {
+    save.bag = {};
+    (save.stickers || []).forEach(id => { if (stickerOf(id)) save.bag[id] = (save.bag[id] || 0) + 1; });
+    save.drawn = (save.stickers || []).length;
+  }
+  delete save.stickers;
   let sessionGot = [];
+  /* draw a sticker: the first few give one thing for each room, then mostly new ones, sometimes a double */
+  const FIRST = ["food", "deco", "wear", "scene", "deco", "food"];
+  function draw() {
+    const fresh = STICKERS.filter(s => !save.bag[s.id]);
+    const kind = FIRST[save.drawn];
+    const pool = kind && fresh.some(s => s.kind === kind) ? fresh.filter(s => s.kind === kind)
+      : fresh.length && Math.random() < 0.7 ? fresh : STICKERS;
+    return pick(pool);
+  }
   function syncStickers(session) {
-    const should = Math.min(STICKERS.length, Math.floor(save.stars / STARS_PER_STICKER));
     const got = [];
-    save.stickers = save.stickers.filter(id => STICKERS.some(s => s.id === id)).slice(0, should);
-    while (save.stickers.length < should) {
-      const s = STICKERS[save.stickers.length];
-      save.stickers.push(s.id); got.push(s);
-      if (session) { save.fresh.push(s.id); sessionGot.push(s.id); }
+    while (save.drawn < Math.floor(save.stars / STARS_PER_STICKER)) {
+      const s = draw();
+      save.bag[s.id] = (save.bag[s.id] || 0) + 1; save.drawn++;
+      got.push(s); save.fresh.push(s.id);
+      if (session) sessionGot.push(s.id);
     }
     return got;
   }
   syncStickers(false); persist();
-  const owns = id => STARTER.includes(id) || save.stickers.includes(id) || id === "goodnight";
-  const nextStickerIn = () => save.stickers.length >= STICKERS.length ? 0 : STARS_PER_STICKER - (save.stars % STARS_PER_STICKER);
+  const count = id => save.bag[id] || 0;
+  const owned = () => STICKERS.filter(s => count(s.id)).length;
+
+  /* ---------- My friend's needs (0–100): they go down as real time passes ---------- */
+  const NEED_MIN = { food: 2.5, rest: 4, fun: 2 }; // minutes for one point
+  function needs() {
+    const n = save.needs || (save.needs = { food: 35, rest: 60, fun: 30, t: Date.now() });
+    const min = (Date.now() - n.t) / 60000;
+    if (min > 0) { for (const k in NEED_MIN) n[k] = Math.max(0, n[k] - min / NEED_MIN[k]); n.t = Date.now(); }
+    return n;
+  }
+  function need(k, d) { const n = needs(); n[k] = Math.max(0, Math.min(100, n[k] + d)); persist(); return n[k]; }
+  const owns = id => STARTER.includes(id) || count(id) > 0 || id === "goodnight";
+  const nextStickerIn = () => STARS_PER_STICKER - (save.stars % STARS_PER_STICKER);
 
   /* adaptive difficulty: -3 (needs help) … +3 (knows it) */
   const skill = id => save.skill[id] || 0;
@@ -309,7 +330,7 @@ window.LS = (() => {
       <button class="buddy-body" aria-label="Bunny">${window.ART.friend("bunny", { mascot: true })}</button>
     </div>`;
   let moodTimer = 0, bubbleTimer = 0, lastMood = "idle", lastTouch = Date.now();
-  const MOODS = ["mood-idle", "mood-happy", "mood-think", "mood-sleep", "mood-eat", "mood-dance", "mood-wave"];
+  const MOODS = ["mood-idle", "mood-happy", "mood-think", "mood-sleep", "mood-eat", "mood-dance", "mood-wave", "mood-sad", "mood-tired"];
   const setSvgMood = (s, m) => { s.classList.remove(...MOODS); void s.getBoundingClientRect(); s.classList.add("mood-" + m); };
   const buddy = {
     mood(m, ms = 1500) {
@@ -384,22 +405,25 @@ window.LS = (() => {
   function renderStars() {
     const n = $("#starNum"); if (n) n.textContent = save.stars;
     const dot = $("#stickerDot"); if (dot) dot.hidden = !save.fresh.length;
-    const sc = $("#stickerNum"); if (sc) sc.textContent = save.stickers.length;
+    const sc = $("#stickerNum"); if (sc) sc.textContent = owned();
   }
   function addStar(n = 1, from) {
     save.stars += n;
+    if (save.friend) need("fun", 3 * n); // learning makes my friend happy
     const got = syncStickers(true);
     persist(); renderStars();
     restart($("#starCount"), "bump");
     burst(from);
     buddy.mood("happy", 1300);
-    got.forEach((s, i) => setTimeout(() => toast(s), 700 + i * 2800));
+    got.slice(0, 3).forEach((s, i) => setTimeout(() => toast(s), 700 + i * 2800));
     return got;
   }
   function toast(s) {
     const t = document.createElement("div");
     t.className = "toast"; t.setAttribute("role", "status");
-    t.innerHTML = `<span class="toast-art sticker-art">${stickerArt(s)}</span><span><b>New sticker!</b><small>Mây nhận sticker mới</small></span>`;
+    const n = count(s.id);
+    t.innerHTML = `<span class="toast-art sticker-art">${stickerArt(s)}${n > 1 ? `<i class="st-count">×${n}</i>` : ""}</span>`
+      + `<span><b>${n > 1 ? "One more!" : "New sticker!"}</b><small>${n > 1 ? `Mây có ${n} sticker này rồi` : "Mây nhận sticker mới"}</small></span>`;
     document.body.appendChild(t);
     sfx("sparkle"); restart($("#stickerBtn"), "bump");
     document.dispatchEvent(new CustomEvent("sticker", { detail: s.id }));
@@ -470,7 +494,7 @@ window.LS = (() => {
   function celebrate({ title = "Hooray!", sub = "Mây giỏi quá!", again, voice = ["hooray"], home = "#home", homeLabel = "Home" } = {}) {
     closeCelebrate();
     celeOpen = true;
-    const earned = sessionGot.map(id => STICKERS.find(s => s.id === id)).filter(Boolean);
+    const earned = sessionGot.map(stickerOf).filter(Boolean);
     const next = nextStickerIn();
     const el = document.createElement("div");
     el.className = "celebrate"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", title);
@@ -480,8 +504,8 @@ window.LS = (() => {
         <div class="mascot">${window.ART.friend("bunny", { mascot: true }).replace("mood-idle", "mood-dance")}</div>
         <h2>${title}</h2><p>${sub}</p>
         ${earned.length
-          ? `<div class="cele-stickers" aria-label="New stickers">${earned.map((s, i) => `<span class="sticker-art" style="animation-delay:${400 + i * 200}ms">${stickerArt(s)}</span>`).join("")}</div><p class="cele-note">Sticker mới trong sổ sticker!</p>`
-          : `<p class="cele-note">${next ? `Còn ${next} ⭐ nữa là có sticker mới` : "Mây đã có đủ sticker!"}</p>`}
+          ? `<div class="cele-stickers" aria-label="New stickers">${earned.slice(0, 6).map((s, i) => `<span class="sticker-art" style="animation-delay:${400 + i * 200}ms">${stickerArt(s)}${count(s.id) > 1 ? `<i class="st-count">×${count(s.id)}</i>` : ""}</span>`).join("")}</div><p class="cele-note">Sticker mới trong sổ sticker!</p>`
+          : `<p class="cele-note">Còn ${next} ⭐ nữa là có sticker mới</p>`}
         <div class="cele-actions">
           ${again ? `<button class="btn green" data-a="again">${I.again} Play again</button>` : ""}
           <a class="btn white" href="${home}" data-a="home">${I.home} ${homeLabel}</a>
@@ -514,7 +538,8 @@ window.LS = (() => {
     $, $$, wait, shuffle, pick, img, reduced, restart,
     WEEKS, MONTHS, LETTERS, WORDS, W, SUPPLIES, TEXT, I, lineFor, wordKey, slug: LS_.slug, qaLines: LS_.qaLines,
     isDone, markDone,
-    STICKERS, STARS_PER_STICKER, STARTER, stickerArt, nextStickerIn, owns, save, persist, renderStars,
+    FOOD: LS_.FOOD, needs, need,
+    STICKERS, STARS_PER_STICKER, STARTER, stickerArt, stickerOf, nextStickerIn, owns, count, owned, save, persist, renderStars,
     skill, learn, pickWeighted,
     say, hush, praise, sfx, preload, addStar, burst, floaters, celebrate, closeCelebrate, isCelebrating, startSession,
     buddy, buddyHTML, setSvgMood, showGate, mountHeader,

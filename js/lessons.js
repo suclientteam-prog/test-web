@@ -290,7 +290,7 @@ window.LESSONS = (() => {
     q_this: "What is this?", q_have: "What do you have?", q_whatisit: "What is it?", q_who: "Who is this?",
     tidy_intro: "Let's tidy up!", w_tidyup: "Tidy up!", done: "All tidy! Good job!",
     ok1: "Great job!", ok2: "Well done!", ok3: "Super!", yay: "Yay!", hooray: "Hooray!", no1: "Oops! Try again.", think: "Hmm. Try again!",
-    listen: "Listen and find.", pop_bubbles: "Pop the bubbles!", peekaboo: "Peekaboo!", find_shadow: "Find the shadow!", find_same: "Find the same picture!",
+    listen: "Listen and find.", shoot_bubbles: "Shoot the bubbles! Three the same, pop!", match_three: "Match three pictures!", find_shadow: "Find the shadow!", find_same: "Find the same picture!",
     pack_bag: "Pack your backpack!", go_school: "Let's go to school!", sticker: "You got a sticker!", tap_hear: "Tap and listen!",
     hello_ready: "Hello! Are you ready?", lets_play: "Yes! Let's play!", bye: "Bye bye!", welcome_back: "Welcome back!", what_play: "What shall we play?",
     good_morning: "Good morning!", pick_friend: "Choose your friend!", care_hi: "Hi! I'm your friend.", giggle: "Hee hee!",
@@ -315,7 +315,94 @@ window.LESSONS = (() => {
     look_bag: "Look in your bag.", look_want: "Look! What do you want?", you_said: "Great talking!",
     ginger_run: "Run, run, as fast as you can!", ginger_catch: "You can't catch me! I'm the gingerbread man!",
     ginger_go: "Help the gingerbread man run!", day_review: "Let's review!", month_review: "Month review!",
+    play_out: "Let's go out and play!", decorate: "Let's decorate!", all_used: "Get more stickers to put more!",
+    // My friend: needs and outings
+    sleepy: "I'm sleepy.", tired: "I'm tired.", want_play: "I want to play!", not_sleepy: "I'm not sleepy! Let's play!",
+    too_tired: "I'm tired. Let's sleep first.", too_hungry: "I'm hungry. Let's eat first.",
+    where_go: "Where shall we go?", go_market: "Let's go to the supermarket!", go_gym: "Let's exercise!",
+    shop_list: "Listen! What do I need?", shop_done: "Thank you! Bye bye!", park_done: "What a fun day!",
+    gym_watch: "Watch me!", breathe: "Breathe in. Breathe out.", gym_done: "Phew! I'm tired. I'm hungry!",
+    pose_tree: "Be a tree!", pose_star: "Be a star!", pose_cat: "Be a cat! Stretch!", pose_butterfly: "Be a butterfly! Flap, flap!",
   };
+  /* the supermarket sells the food words of the lessons */
+  const FOOD = ["apple", "banana", "sandwich", "hotdog", "icecream", "water", "juice", "milk", "mooncake", "pineapple"];
+  /* ---------- stickers: one for every 5 stars, drawn at random (doubles are counted).
+     Every sticker is used in "My friend": food → Eat, wear → Dress, scene/deco → Play, bath/sleep → their rooms.
+     voice: an older line key that already has an mp3; otherwise the key is made from the kind (eat_, put_, go_, use_) */
+  const STICKERS = [
+    // food
+    { id: "banana", en: "banana", art: "e_banana", kind: "food", say: "Eat a banana." },
+    { id: "milk", en: "milk", art: "e_milk", kind: "food", say: "Drink some milk.", voice: "drink_milk" },
+    { id: "carrot", en: "carrot", art: "e_carrot", kind: "food", say: "Eat a carrot." },
+    { id: "cookie", en: "cookie", art: "e_cookie", kind: "food", say: "Eat a cookie." },
+    { id: "mooncake", en: "moon cake", art: "mooncake", kind: "food", say: "Eat a moon cake." },
+    { id: "icecream", en: "ice cream", art: "icecream", kind: "food", say: "Eat some ice cream." },
+    { id: "sandwich", en: "sandwich", art: "sandwich", kind: "food", say: "Eat a sandwich." },
+    { id: "hotdog", en: "hot dog", art: "hotdog", kind: "food", say: "Eat a hot dog." },
+    { id: "juice", en: "juice", art: "juice", kind: "food", say: "Drink some juice." },
+    { id: "pineapple", en: "pineapple", art: "pineapple", kind: "food", say: "Eat some pineapple." },
+    { id: "lollipop", en: "lollipop", art: "e_lollipop", kind: "food", say: "Lick the lollipop." },
+    { id: "strawberry", en: "strawberry", art: "f_strawberry", kind: "food", say: "Eat a strawberry." },
+    { id: "watermelon", en: "watermelon", art: "f_watermelon", kind: "food", say: "Eat some watermelon." },
+    { id: "cupcake", en: "cupcake", art: "f_cupcake", kind: "food", say: "Eat a cupcake." },
+    { id: "pizza", en: "pizza", art: "f_pizza", kind: "food", say: "Eat some pizza." },
+    { id: "grapes", en: "grapes", art: "f_grapes", kind: "food", say: "Eat some grapes." },
+    { id: "doughnut", en: "doughnut", art: "f_doughnut", kind: "food", say: "Eat a doughnut." },
+    // bath & sleep
+    { id: "sponge", en: "wash", art: "e_sponge", kind: "bath", say: "Wash, wash, wash!", voice: "use_sponge" },
+    { id: "toothbrush", en: "toothbrush", art: "f_toothbrush", kind: "bath", say: "Brush your teeth!" },
+    { id: "teddy", en: "teddy bear", art: "e_teddy", kind: "sleep", say: "Here is your teddy bear.", voice: "use_teddy" },
+    // clothes: one thing per slot; x, y, w = where a picture sits on the friend (% of the friend's box).
+    // shoes, socks, hat, crown and sunglasses are drawn inside the friend picture (art.js) instead.
+    { id: "shoes", en: "shoes", art: "e_shoes", kind: "wear", slot: "feet", say: "Put on your shoes." },
+    { id: "socks", en: "socks", art: "e_socks", kind: "wear", slot: "socks", say: "Put on your socks." },
+    { id: "hat", en: "hat", art: "e_hat", kind: "wear", slot: "head", say: "Put on your hat." },
+    { id: "crown", en: "crown", art: "e_crown", kind: "wear", slot: "head", say: "Put on your crown." },
+    { id: "sunglasses", en: "sunglasses", art: "e_sunglasses", kind: "wear", slot: "face", say: "Put on your sunglasses." },
+    { id: "cap", en: "cap", art: "f_cap", kind: "wear", slot: "head", say: "Put on your cap.", x: 50, y: 13, w: 52 },
+    { id: "tophat", en: "top hat", art: "f_tophat", kind: "wear", slot: "head", say: "Put on your top hat.", x: 50, y: 9, w: 46 },
+    { id: "gradcap", en: "graduation cap", art: "f_gradcap", kind: "wear", slot: "head", say: "Put on your graduation cap.", x: 50, y: 11, w: 54 },
+    { id: "bow", en: "bow", art: "f_bow", kind: "wear", slot: "bow", say: "Put on your bow.", x: 72, y: 20, w: 28 },
+    { id: "glasses", en: "glasses", art: "f_glasses", kind: "wear", slot: "face", say: "Put on your glasses.", x: 50, y: 37, w: 50 },
+    { id: "scarf", en: "scarf", art: "f_scarf", kind: "wear", slot: "neck", say: "Put on your scarf.", x: 50, y: 68, w: 42 },
+    { id: "wand", en: "magic wand", art: "f_wand", kind: "wear", slot: "hand", say: "Hold the magic wand.", x: 88, y: 64, w: 30 },
+    { id: "umbrella", en: "umbrella", art: "f_umbrella", kind: "wear", slot: "hand", say: "Hold the umbrella.", x: 84, y: 40, w: 52 },
+    // places for the Play room
+    { id: "beach", en: "beach", art: "beach", kind: "scene", say: "Let's go to the beach!" },
+    { id: "mountains", en: "mountains", art: "mountains", kind: "scene", say: "Let's go to the mountains!" },
+    { id: "camping", en: "camping", art: "camping", kind: "scene", say: "Let's go camping!" },
+    { id: "picnic", en: "picnic", art: "picnic", kind: "scene", say: "Let's have a picnic!" },
+    { id: "school", en: "school", art: "school", kind: "scene", say: "Let's go to school!", voice: "go_school" },
+    { id: "moon", en: "moon", art: "moon", kind: "scene", say: "Look at the moon!" },
+    { id: "halloween", en: "Halloween", art: "halloween", kind: "scene", say: "Happy Halloween!" },
+    { id: "vietnam", en: "Vietnam", art: "vietnam", kind: "scene", say: "I love Vietnam!" },
+    { id: "snow", en: "snow", art: "f_snowman", kind: "scene", say: "Let's play in the snow!" },
+    { id: "space", en: "space", art: "f_rocket", kind: "scene", say: "Let's fly to space!" },
+    { id: "sea", en: "sea", art: "f_fish", kind: "scene", say: "Let's swim in the sea!" },
+    // decorations for the Play room (one copy on the scene for each sticker you have)
+    { id: "balloon", en: "balloon", art: "e_balloon", kind: "deco" }, { id: "rainbow", en: "rainbow", art: "e_rainbow", kind: "deco" },
+    { id: "heart", en: "heart", art: "e_heart", kind: "deco" }, { id: "sun", en: "sun", art: "e_sun", kind: "deco" },
+    { id: "glowstar", en: "star", art: "e_glowstar", kind: "deco" }, { id: "flower", en: "flower", art: "e_flower", kind: "deco" },
+    { id: "lantern", en: "lantern", art: "lantern", kind: "deco" }, { id: "redlantern", en: "red lantern", art: "e_redlantern", kind: "deco" },
+    { id: "rabbit", en: "rabbit", art: "rabbit", kind: "deco" }, { id: "moonlady", en: "moon lady", art: "moonlady", kind: "deco" },
+    { id: "snake", en: "snake", art: "snake", kind: "deco" }, { id: "book", en: "book", art: "book", kind: "deco" },
+    { id: "pencil", en: "pencil", art: "pencil", kind: "deco" }, { id: "gift", en: "gift", art: "e_gift", kind: "deco" },
+    { id: "pumpkin", en: "pumpkin", art: "pumpkin", kind: "deco" }, { id: "ghost", en: "ghost", art: "ghost", kind: "deco" },
+    { id: "blackcat", en: "black cat", art: "blackcat", kind: "deco" }, { id: "flag", en: "flag", art: "flag", kind: "deco" },
+    { id: "firework", en: "fireworks", art: "e_firework", kind: "deco" }, { id: "tent", en: "tent", art: "tent", kind: "deco" },
+    { id: "campfire", en: "campfire", art: "campfire", kind: "deco" }, { id: "bird", en: "bird", art: "bird", kind: "deco" },
+    { id: "gingerbread", en: "gingerbread man", art: "gingerbread", kind: "deco" }, { id: "butterfly", en: "butterfly", art: "f_butterfly", kind: "deco" },
+    { id: "kite", en: "kite", art: "f_kite", kind: "deco" }, { id: "unicorn", en: "unicorn", art: "f_unicorn", kind: "deco" },
+    { id: "dino", en: "dinosaur", art: "f_dino", kind: "deco" }, { id: "puppy", en: "puppy", art: "f_puppy", kind: "deco" },
+    { id: "castle", en: "castle", art: "f_castle", kind: "deco" }, { id: "tree", en: "tree", art: "f_tree", kind: "deco" },
+    { id: "sunflower", en: "sunflower", art: "f_sunflower", kind: "deco" }, { id: "mushroom", en: "mushroom", art: "f_mushroom", kind: "deco" },
+    { id: "ladybug", en: "ladybug", art: "f_ladybug", kind: "deco" }, { id: "turtle", en: "turtle", art: "f_turtle", kind: "deco" },
+    { id: "xmastree", en: "Christmas tree", art: "f_xmastree", kind: "deco" }, { id: "planet", en: "planet", art: "f_planet", kind: "deco" },
+    { id: "shell", en: "shell", art: "f_shell", kind: "deco" },
+  ];
+  const USE_KEY = { food: "eat_", wear: "put_", scene: "go_", bath: "use_", sleep: "use_" };
+  STICKERS.forEach(s => { if (s.say) s.voice = s.voice || USE_KEY[s.kind] + s.id; });
+
   /* every line the app can say: key → text (used for the voice files and as speech fallback) */
   function allLines() {
     const L = { ...UI };
@@ -327,8 +414,14 @@ window.LESSONS = (() => {
       if (qa.type === "say") { qa.lines.forEach(t => { L[slug(t)] = t; }); return; }
       qa.items.forEach(id => Object.values(qaLines(qa, id)).forEach(t => { L[slug(t)] = t; }));
     }));
+    STICKERS.forEach(s => {
+      if (!L["w_" + s.id]) L["w_" + s.id] = cap(s.en) + ".";
+      if (s.say && !L[s.voice]) L[s.voice] = s.say;
+    });
+    L.go_park = "Let's go to the park!";
+    FOOD.forEach(id => { L["need_" + id] = `I need ${W[id].a}.`; });
     return L;
   }
 
-  return { WORDS, W, WEEKS, MONTHS, LETTERS, slug, qaLines, allLines };
+  return { WORDS, W, WEEKS, MONTHS, LETTERS, STICKERS, FOOD, slug, qaLines, allLines };
 })();

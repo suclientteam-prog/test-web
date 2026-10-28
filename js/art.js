@@ -1,6 +1,6 @@
 /* Little Star English – hand-made vector characters.
    One rig draws Bunny, Cat and Bear. Moods and clothes are shown by CSS classes:
-   mood-idle | mood-happy | mood-think | mood-sleep | mood-eat | mood-dance | mood-wave
+   mood-idle | mood-happy | mood-think | mood-sleep | mood-eat | mood-dance | mood-wave | mood-sad | mood-tired
    wear-shirt wear-shoes wear-hat wear-socks wear-sunglasses wear-crown | show-mud show-bubbles show-pillow show-blanket */
 window.ART = (() => {
   "use strict";
@@ -92,6 +92,8 @@ window.ART = (() => {
    <g class="m-open"><path d="M104 144 Q120 172 136 144 Z" fill="#b3364f" stroke="#3a2a1f" stroke-width="4.5" stroke-linejoin="round"/><path d="M111 156 Q120 150 129 156 Q126 164 120 165 Q114 164 111 156 Z" fill="#ff8fab"/></g>
    <ellipse class="m-o" cx="120" cy="150" rx="6.5" ry="7.5" fill="#b3364f" stroke="#3a2a1f" stroke-width="3.5"/>
    <path class="m-flat" d="M110 150 Q120 145 132 151" fill="none" stroke="#3a2a1f" stroke-width="4.5" stroke-linecap="round"/>
+   <path class="m-sad" d="M107 154 Q120 141 133 154" fill="none" stroke="#3a2a1f" stroke-width="4.5" stroke-linecap="round"/>
+   <path class="x-tear" d="M84 124 Q78 134 84 138 Q90 134 84 124 Z" fill="#7cc7ff" stroke="#3a2a1f" stroke-width="2.5"/>
    ${whiskers}
   </g>
   <g class="x-mud" fill="#9b6a3c" opacity=".85"><ellipse cx="74" cy="84" rx="13" ry="9"/><ellipse cx="160" cy="170" rx="10" ry="7"/><ellipse cx="96" cy="210" rx="15" ry="10"/><ellipse cx="150" cy="248" rx="12" ry="8"/><circle cx="170" cy="76" r="6"/><circle cx="68" cy="244" r="7"/></g>
