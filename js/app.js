@@ -4,7 +4,7 @@
 (() => {
   "use strict";
   const L = window.LS, ART = window.ART;
-  const { $, $$, wait, shuffle, pick, img, restart, W, WEEKS, MONTHS, LETTERS, SUPPLIES, I, say, hush, praise, sfx, addStar, buddy } = L;
+  const { $, $$, wait, shuffle, pick, img, restart, W, WEEKS, MONTHS, LETTERS, SUPPLIES, I, say, hush, praise, encourage, slowLine, sfx, addStar, buddy } = L;
   const view = $("#view");
   const slug = L.slug;
 
@@ -364,16 +364,32 @@
       <div id="qz" class="qz"></div>`;
     const ear = $(".ear"), box = $("#qz");
     let replay = () => {};
-    const hear = async (...keys) => { ear.classList.add("playing"); await say(...keys); if (alive(id)) ear.classList.remove("playing"); };
+    let idleT = 0, nudges = 0;
+    const hear = async (...keys) => {
+      clearTimeout(idleT); ear.classList.add("playing");
+      const ok = await say(...keys);
+      if (alive(id)) { ear.classList.remove("playing"); if (ok) wake(); }
+    };
     ear.onclick = () => replay();
+    /* slow to answer: cheer and ask again; the second time, the right answer shines */
+    const okEl = () => $(".answer[data-ok='1']", box) || $(`.choice[data-id="${box.dataset.ans}"]`, box);
+    function wake() { clearTimeout(idleT); if (nudges < 2) idleT = setTimeout(nudge, 9000); }
+    async function nudge() {
+      if (!alive(id) || $(".right", box) || !okEl()) return;
+      nudges++; buddy.mood("think", 1800);
+      if (nudges >= 2) okEl().classList.add("hint");
+      if (await say(nudges >= 2 ? "need_help" : slowLine()) && alive(id) && !$(".right", box)) replay();
+    }
+    /* a wrong answer: cheer, and once the right answer shines, point at it */
+    const wrongSay = () => okEl() && okEl().classList.contains("hint") ? "look_shine" : encourage();
 
     /* a correct choice: stars, learning record, then the next round */
     async function right(el, wid, misses, ...voice) {
-      sfx("good");
+      sfx("good"); clearTimeout(idleT);
       if (wid) L.learn(wid, misses === 0);
       if (misses === 0) { got++; streak++; $$(".progress i")[n].classList.add("got"); addStar(1, el); } else streak = 0;
       lastMiss = misses > 0;
-      await say(...voice, praise());
+      await say(...voice, misses ? "got_it" : praise());
       if (!alive(id)) return;
       n++; later(() => next(false), 300);
     }
@@ -384,6 +400,7 @@
         return;
       }
       const r = rounds[n];
+      nudges = 0; box.dataset.ans = r.t === "point" ? r.id : "";
       if (r.t === "find") findRound(first);
       else if (r.t === "point") pointRound(r, first);
       else if (r.t === "yesno") yesnoRound(r, first);
@@ -396,7 +413,7 @@
       box.innerHTML = `<div class="choices" data-n="${opts.length}">${opts.map(o => `<button class="choice" data-id="${o.id}" aria-label="${o.en}"><img src="${img(o.id)}" alt=""></button>`).join("")}</div><p class="find-word" aria-live="polite"></p>`;
     }
     function findRound(first) {
-      const ans = L.pickWeighted(pool, prev); prev = ans.id;
+      const ans = L.pickWeighted(pool, prev); prev = ans.id; box.dataset.ans = ans.id;
       const easy = lastMiss || L.skill(ans.id) < 0;
       const count = easy ? 2 : streak >= 3 && innerWidth >= 700 ? 4 : 3;
       pictureChoices(ans, pool, count);
@@ -412,7 +429,7 @@
           misses++; sfx("bad"); restart(c, "wrong");
           c.disabled = true; setTimeout(() => c.classList.add("gone"), 350);
           if (misses >= 2 || $$(".choice:not(:disabled)", box).length <= 2) $$(".choice", box).find(x => x.dataset.id === ans.id).classList.add("hint");
-          hear("think", "find_" + ans.id);
+          hear(wrongSay(), "find_" + ans.id);
         }
       });
       first ? hear("listen", "find_" + ans.id) : hear("find_" + ans.id);
@@ -430,7 +447,7 @@
         else {
           misses++; sfx("bad"); restart(c, "wrong"); c.disabled = true; setTimeout(() => c.classList.add("gone"), 350);
           if (misses >= 2) $$(".choice", box).find(x => x.dataset.id === ans.id).classList.add("hint");
-          hear("think", slug(lines.a));
+          hear(wrongSay(), slug(lines.a));
         }
       });
       first ? hear("choose_answer", slug(lines.q), slug(lines.a)) : replay();
@@ -467,7 +484,7 @@
         else {
           misses++; sfx("bad"); restart(b, "wrong"); b.disabled = true; setTimeout(() => b.classList.add("gone"), 350);
           if ($$(".answer:not(:disabled)", box).length <= 2) $$(".answer", box).find(x => x.dataset.ok === "1").classList.add("hint");
-          hear("think", slug(lines.q));
+          hear(wrongSay(), slug(lines.q));
         }
       });
       first ? hear("choose_answer", slug(lines.q)) : replay();
@@ -502,7 +519,7 @@
       $$(".answer", box).forEach(b => b.onclick = () => {
         if (locked) return;
         if (b.dataset.ok === "1") { locked = true; b.classList.remove("hint"); b.classList.add("right"); right(b, w.id, misses, slug(yes ? lines.yes : lines.no)); }
-        else { misses++; sfx("bad"); restart(b, "wrong"); $$(".answer", box).find(x => x.dataset.ok === "1").classList.add("hint"); hear("think", lookKey, slug(lines.q)); }
+        else { misses++; sfx("bad"); restart(b, "wrong"); $$(".answer", box).find(x => x.dataset.ok === "1").classList.add("hint"); hear(wrongSay(), lookKey, slug(lines.q)); }
       });
       first ? hear(lookKey, slug(lines.q)) : replay();
     }
@@ -1143,7 +1160,7 @@
         } else {
           missed = true; restart(b, "wiggle"); sfx("bad");
           $$(".shade", opts).find(x => x.dataset.id === w.id).classList.add("hint");
-          say("w_" + w.id);
+          say("look_shine", "w_" + w.id);
         }
       });
       if (first) say("find_shadow");
@@ -1578,7 +1595,7 @@
         } else {
           misses++; sfx("bad"); restart(b, "wrong"); b.disabled = true; b.classList.add("gone"); fmood("think", 1500);
           if (misses >= 2 || $$(".o-ans:not(:disabled)", tray).length <= 2) $(".o-ans[data-ok='1']", tray).classList.add("hint");
-          if (await say("think") !== false && live(tok)) prompt();
+          if (await say(encourage()) !== false && live(tok)) prompt();
         }
       });
       prompt();
@@ -1885,7 +1902,7 @@
     $("#again").onclick = () => ask();
     const overBox = (x, y) => { const b = box.getBoundingClientRect(); return x > b.left - 10 && x < b.right + 10 && y > b.top - 40 && y < b.bottom; };
     function tryPut(el) {
-      if (el.dataset.id !== current()) { sfx("bad"); el.style.translate = ""; restart(el, "wrong"); ask("think"); return; }
+      if (el.dataset.id !== current()) { sfx("bad"); el.style.translate = ""; restart(el, "wrong"); ask(encourage()); return; }
       const r = el.getBoundingClientRect(), b = box.getBoundingClientRect();
       const tx = parseFloat(el.dataset.tx) || 0, ty = parseFloat(el.dataset.ty) || 0;
       el.classList.remove("dragging");

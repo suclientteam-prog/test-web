@@ -292,7 +292,7 @@ window.LESSONS = (() => {
     ok1: "Great job!", ok2: "Well done!", ok3: "Super!", yay: "Yay!", hooray: "Hooray!", no1: "Oops! Try again.", think: "Hmm. Try again!",
     listen: "Listen and find.", shoot_bubbles: "Shoot the bubbles! Three the same, pop!", match_three: "Match three pictures!", find_shadow: "Find the shadow!", find_same: "Find the same picture!",
     pack_bag: "Pack your backpack!", go_school: "Let's go to school!", sticker: "You got a sticker!", tap_hear: "Tap and listen!",
-    hello_ready: "Hello! Are you ready?", lets_play: "Yes! Let's play!", bye: "Bye bye!", welcome_back: "Welcome back!", what_play: "What shall we play?",
+    hello_ready: "Hello Mây! Let's learn English together!", lets_play: "Yes! Let's play!", bye: "Bye bye!", welcome_back: "Welcome back!", what_play: "What shall we play?",
     good_morning: "Good morning!", pick_friend: "Choose your friend!", care_hi: "Hi! I'm your friend.", giggle: "Hee hee!",
     w_bunny: "Bunny.", w_cat: "Cat. Meow!", w_bear: "Bear.",
     hungry: "I'm hungry!", yummy: "Yummy!", full: "I'm full! Thank you!",
@@ -323,6 +323,10 @@ window.LESSONS = (() => {
     shop_list: "Listen! What do I need?", shop_done: "Thank you! Bye bye!", park_done: "What a fun day!",
     gym_watch: "Watch me!", breathe: "Breathe in. Breathe out.", gym_done: "Phew! I'm tired. I'm hungry!",
     pose_tree: "Be a tree!", pose_star: "Be a star!", pose_cat: "Be a cat! Stretch!", pose_butterfly: "Be a butterfly! Flap, flap!",
+    // cheering and guiding: after a wrong answer, or when the answer takes long
+    try1: "Almost! Try again.", try2: "Good try! Look again.", try3: "Don't worry. You can do it!", try4: "Listen again. Try one more time.",
+    got_it: "You got it! Good job!", look_shine: "Look at the shining one!",
+    slow1: "Take your time.", slow2: "Listen carefully.", slow3: "Are you ready? Tap your answer!", need_help: "Need help? Look at the shining one!",
   };
   /* the supermarket sells the food words of the lessons */
   const FOOD = ["apple", "banana", "sandwich", "hotdog", "icecream", "water", "juice", "milk", "mooncake", "pineapple"];

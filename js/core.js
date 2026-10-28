@@ -302,6 +302,9 @@ window.LS = (() => {
   }
   function hush() { seqToken++; stopVoice(); player.pause(); ducked = false; setMusicGain(musicLevel(), 0.5); buddy.talk(false); }
   const praise = () => pick(["ok1", "ok2", "ok3", "yay"]);
+  /* after a wrong answer / when the child is slow to answer */
+  const encourage = () => pick(["think", "try1", "try2", "try3", "try4"]);
+  const slowLine = () => pick(["slow1", "slow2", "slow3"]);
 
   /* First touch unlocks sound on iPhone/iPad/Android */
   function unlock() {
@@ -380,7 +383,7 @@ window.LS = (() => {
     const wake = async () => {
       if (woke) return; woke = true;
       unlock(); sfx("sparkle"); setSvgMood(svg, "wave");
-      bubble.textContent = "Hello! Are you ready?"; restart(bubble, "pop");
+      bubble.textContent = "Hello Mây! Let's learn English together!"; restart(bubble, "pop");
       hint.hidden = true; g.classList.add("awake");
       preload(["hello_ready", "lets_play"]);
       startMusic();
@@ -541,7 +544,7 @@ window.LS = (() => {
     FOOD: LS_.FOOD, needs, need,
     STICKERS, STARS_PER_STICKER, STARTER, stickerArt, stickerOf, nextStickerIn, owns, count, owned, save, persist, renderStars,
     skill, learn, pickWeighted,
-    say, hush, praise, sfx, preload, addStar, burst, floaters, celebrate, closeCelebrate, isCelebrating, startSession,
+    say, hush, praise, encourage, slowLine, sfx, preload, addStar, burst, floaters, celebrate, closeCelebrate, isCelebrating, startSession,
     buddy, buddyHTML, setSvgMood, showGate, mountHeader,
     pauseMusic: () => setMusicGain(0, 0.3), resumeMusic: () => setMusicGain(musicLevel(), 0.8),
   };

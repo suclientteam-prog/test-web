@@ -19,6 +19,14 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets" / "audio"
 # letter sounds are spelled with phonemes (plain "a" would be read as the letter name)
 PHONEMES = {"snd_a": "[[ˈæ, ˈæ,]] ant!", "snd_p": "[[pʰə, pʰə,]] pineapple!"}
+# the English voice cannot read Vietnamese letters: "Mây" is spoken as "May"
+SPOKEN = {"Mây": "May"}
+
+
+def spoken(text):
+    for a, b in SPOKEN.items():
+        text = text.replace(a, b)
+    return text
 
 
 def synth(voice, text):
@@ -57,7 +65,7 @@ def main():
         f = OUT / f"{key}.mp3"
         if f.exists() and key not in redo:
             continue
-        x, rate = synth(voice, PHONEMES.get(key, text))
+        x, rate = synth(voice, PHONEMES.get(key, spoken(text)))
         f.write_bytes(to_mp3(x, rate))
         made += 1
         print(f"{key}: {text}")
